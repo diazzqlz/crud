@@ -1,0 +1,23 @@
+{
+  "name": "crud-hero",
+  "version": "1.0.0",
+  "description": "Está é a documentação de requisitos para a API de Agenda de contatos.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^5.4.2",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.4.2",
+    "fastify": "^4.24.3",
+    "zod": "^3.22.4"
+  }
+}
