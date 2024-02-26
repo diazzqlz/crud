@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from 'zod'
 import { prisma } from "../../lib/prisma";
+import bcrypt from 'bcrypt'
 
 export async function createUser(app: FastifyInstance) {
   app.post("/register", async (request, reply) => {
@@ -10,7 +11,7 @@ export async function createUser(app: FastifyInstance) {
       password: z.string().min(5)
     })
 
-    const { name, email, password } = createUserBody.parse(request.body)
+    const { name, email, password } = createUserBody.parse(request.body)  
 
     const emailAlreadyExists = await prisma.user.findUnique({
       where: {
@@ -22,11 +23,14 @@ export async function createUser(app: FastifyInstance) {
       return reply.status(400).send({ message: "email already exists." })
     }
 
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash(password, saltRounds) 
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password
+        password: passwordHash
       }
     })
 
