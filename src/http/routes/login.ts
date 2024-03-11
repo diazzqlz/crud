@@ -35,8 +35,8 @@ export async function login(app: FastifyInstance) {
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        console.error('chave jwt nao definida');
-        throw new Error('chave jwt nao definida')
+        console.error('jwt key not defined');
+        throw new Error('jwt key not defined')
       }
 
       const token = jwt.sign({ id: user.id }, jwtSecret, { expiresIn: '1h' })
