@@ -14,15 +14,4 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
-
-  timeLog TimeLog[]
-}
-
-model TimeLog {
-  id        String   @id @default(uuid())
-  userId    String
-  entryTime DateTime
-  exitTime  DateTime
-
-  user User @relation(fields: [userId], references: [id])
 }
