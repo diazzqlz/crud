@@ -1,11 +1,23 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../../lib/prisma";
-import { Params } from "../../types/params";
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
+import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { z } from "zod";
 
 export async function deleteUser(app: FastifyInstance) {
-  app.delete("/users/:id", async (request: FastifyRequest<{ Params: Params}>, reply: FastifyReply) => {
+  app.withTypeProvider<ZodTypeProvider>().delete("/users/:id", {
+    schema: {
+      params: z.object({
+        id: z.string().uuid()
+      }),
+      response: {
+        200: z.object({
+          message: z.string()
+        })
+      }
+    }
+  }, async (request: FastifyRequest<{ Params: { id: string }}>, reply: FastifyReply) => {
     const { id } = request.params
     const authHeader = request.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
@@ -15,18 +27,16 @@ export async function deleteUser(app: FastifyInstance) {
       return;
     }
 
-    try {
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        console.error('jwt key not defined');
         throw new Error('jwt key not defined')
       }
 
       const decodedToken = jwt.verify(token, jwtSecret) as { id: string }
 
       if(decodedToken.id !== id) {
-        reply.status(403).send({ message: "you don't have permission to delete this user."})
+        throw new Error("you don't have permission to delete this user.")
       }
 
       const userExists = await prisma.user.findUnique({
@@ -36,7 +46,7 @@ export async function deleteUser(app: FastifyInstance) {
       });
 
       if(!userExists) {
-        return reply.status(404).send({ message: "user not found."})
+        throw new Error("user not found.")
       }
 
       await prisma.user.delete({
@@ -46,9 +56,5 @@ export async function deleteUser(app: FastifyInstance) {
       });
 
       return reply.status(200).send({ message: "user deleted."})
-  } catch (error) {
-      console.error('error deleting user:', error);
-      return reply.status(500).send({ message: "error deleting user."})
-  }
   })
 }

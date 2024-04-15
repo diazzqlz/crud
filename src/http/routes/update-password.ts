@@ -2,12 +2,11 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { z } from 'zod'
 import { prisma } from "../../lib/prisma";
 import bcrypt from 'bcrypt'
-import { Params } from "../../types/params";
 import jwt from 'jsonwebtoken'
 
 
 export async function updatePassword(app: FastifyInstance) {
-  app.patch("/users/:id", async (request: FastifyRequest<{ Params: Params}>, reply: FastifyReply) => {
+  app.patch("/users/:id", async (request: FastifyRequest<{ Params: { id: string }}>, reply: FastifyReply) => {
     const { id } = request.params
     const authHeader = request.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]

@@ -2,16 +2,27 @@ import { FastifyInstance } from "fastify";
 import { z } from 'zod'
 import { prisma } from "../../lib/prisma";
 import bcrypt from 'bcrypt'
+import { ZodTypeProvider } from "fastify-type-provider-zod";
 
 export async function createUser(app: FastifyInstance) {
-  app.post("/register", async (request, reply) => {
-    const createUserBody = z.object({
-      name: z.string(),
-      email: z.string().email(),
-      password: z.string().min(5)
-    })
+  app.withTypeProvider<ZodTypeProvider>().post("/register", {
+    schema: {
+      body: z.object({
+        name: z.string(),
+        email: z.string().email(),
+        password: z.string().min(5)
+      }),
+      response: {
+        201: z.object({
+          user: z.object({
+            id: z.string()
+          })
+        })
+      }
+    }
+  }, async (request, reply) => {
 
-    const { name, email, password } = createUserBody.parse(request.body)  
+    const { name, email, password } = request.body
 
     const emailAlreadyExists = await prisma.user.findUnique({
       where: {
@@ -20,7 +31,7 @@ export async function createUser(app: FastifyInstance) {
     })
 
     if(emailAlreadyExists) {
-      return reply.status(400).send({ message: "email already exists." })
+      throw new Error("email already exists.")
     }
 
     const saltRounds = 10
