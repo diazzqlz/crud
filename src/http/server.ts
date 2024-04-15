@@ -5,9 +5,9 @@ import { updatePassword } from "./routes/update-password";
 import { deleteUser } from "./routes/delete-user";
 import { authenticateToken } from "../middleware/authenticateToken";
 
-import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { ZodTypeProvider, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
-const app = fastify()
+const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);

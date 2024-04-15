@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from "../../lib/prisma";
 import bcrypt from 'bcrypt'
 import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { BadRequest } from "./_errors/bad-request";
 
 export async function createUser(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post("/register", {
@@ -31,7 +32,7 @@ export async function createUser(app: FastifyInstance) {
     })
 
     if(emailAlreadyExists) {
-      throw new Error("email already exists.")
+      throw new BadRequest("email already exists.")
     }
 
     const saltRounds = 10

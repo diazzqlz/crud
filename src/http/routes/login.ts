@@ -5,6 +5,9 @@ import { prisma } from "../../lib/prisma";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
+import { NotFound } from "./_errors/not-found";
+import { BadRequest } from "./_errors/bad-request";
+import { Unauthorized } from "./_errors/unauthorized";
 
 interface LoginRequestBody {
   email: string
@@ -36,20 +39,19 @@ export async function login(app: FastifyInstance) {
       })
 
       if (!user) {
-        throw new Error("user not found.")
+        throw new NotFound("user not found.")
       }
 
       const passwordMatch = await bcrypt.compare(password, user.password)
 
       if(!passwordMatch) {
-        throw new Error("password incorrect")
+        throw new BadRequest("password incorrect")
       }
 
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        console.error('jwt key not defined');
-        throw new Error('jwt key not defined')
+        throw new Unauthorized('jwt key not defined')
       }
 
       const token = jwt.sign({ id: user.id }, jwtSecret, { expiresIn: '1h' })

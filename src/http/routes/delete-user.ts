@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { Unauthorized } from "./_errors/unauthorized";
+import { NotFound } from "./_errors/not-found";
 
 export async function deleteUser(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().delete("/users/:id", {
@@ -23,20 +25,19 @@ export async function deleteUser(app: FastifyInstance) {
     const token = authHeader && authHeader.split(' ')[1]
     
     if(!token || typeof token !== 'string') {
-      reply.status(401).send({ message: 'authentication token not provided.' });
-      return;
+      throw new Unauthorized('authentication token not provided.' )
     }
 
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        throw new Error('jwt key not defined')
+        throw new Unauthorized('jwt key not defined')
       }
 
       const decodedToken = jwt.verify(token, jwtSecret) as { id: string }
 
       if(decodedToken.id !== id) {
-        throw new Error("you don't have permission to delete this user.")
+        throw new Unauthorized("you don't have permission to delete this user.")
       }
 
       const userExists = await prisma.user.findUnique({
@@ -46,7 +47,7 @@ export async function deleteUser(app: FastifyInstance) {
       });
 
       if(!userExists) {
-        throw new Error("user not found.")
+        throw new NotFound("user not found.")
       }
 
       await prisma.user.delete({

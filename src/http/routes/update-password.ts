@@ -3,40 +3,49 @@ import { z } from 'zod'
 import { prisma } from "../../lib/prisma";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { ZodTypeProvider } from "fastify-type-provider-zod";
+import { Unauthorized } from "./_errors/unauthorized";
+import { NotFound } from "./_errors/not-found";
+import { BadRequest } from "./_errors/bad-request";
 
 
 export async function updatePassword(app: FastifyInstance) {
-  app.patch("/users/:id", async (request: FastifyRequest<{ Params: { id: string }}>, reply: FastifyReply) => {
+  app.withTypeProvider<ZodTypeProvider>().patch("/users/:id", {
+    schema: {
+      params: z.object({
+        id: z.string().uuid()
+      }),
+      body: z.object({
+        password: z.string().min(5),
+        newPassword: z.string().min(5)
+      }),
+      response: {
+        200: z.object({
+          message: z.string()
+        })
+      }
+    }
+  }, async (request: FastifyRequest<{ Params: { id: string }, Body: { password: string, newPassword: string }}>, reply: FastifyReply) => {
     const { id } = request.params
+    const { password, newPassword } = request.body
     const authHeader = request.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
     
     if(!token || typeof token !== 'string') {
-      reply.status(401).send({ message: 'authentication token not provided.' });
-      return;
+      throw new Unauthorized('authentication token not provided.')
     }
-
-    const updateSchemaBody = z.object({
-      password: z.string().min(5),
-      newPassword: z.string().min(5)
-    })
-
-    try {
 
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        console.error('jwt key not defined');
-        throw new Error('jwt key not defined')
+        throw new Unauthorized('jwt key not defined')
       }
 
       const decodedToken = jwt.verify(token, jwtSecret) as { id: string }
 
       if(decodedToken.id !== id) {
-        reply.status(403).send({ message: "you don't have permission to delete this user."})
+        throw new Unauthorized("you don't have permission to update this user.")
       }
-
-      const { password, newPassword } = updateSchemaBody.parse(request.body);
 
       const userExists = await prisma.user.findUnique({
         where: {
@@ -45,13 +54,13 @@ export async function updatePassword(app: FastifyInstance) {
       });
 
       if(!userExists) {
-        return reply.status(404).send({ message: "user not found."})
+        throw new NotFound("user not found.")
       }
 
       const passwordMatch = await bcrypt.compare(password, userExists.password)
 
       if(!passwordMatch) {
-        return reply.status(401).send({ message: "current password incorrect"})
+        throw new BadRequest("current password incorrect")
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10)
@@ -66,9 +75,7 @@ export async function updatePassword(app: FastifyInstance) {
       });
 
       return reply.status(200).send({ message: "password updated"})
-  } catch (error) {
-    return reply.status(500).send({ message: "error updating user password. "})
-  }
+   
   })
 }
 
