@@ -27,6 +27,6 @@ O servidor será iniciado em `http://localhost:3333`.
 
 ### Usuários
 * **POST /register:** Rota para registrar um novo usuário. Requer um corpo JSON com o nome, email e senha do usuário.
-* **GET /users:** Rota para obter todos os usuários cadastrados. Requer autenticação JWT.
+* **GET /users/:id:** Rota para obter um usuário cadastrado.
 * **PATCH /users/:id:** Rota para atualizar um usuário existente. Requer autenticação JWT.
 * **DELETE /users/:id:** Rota para excluir um usuário existente. Requer autenticação JWT.
