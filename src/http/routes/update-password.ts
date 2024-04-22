@@ -12,6 +12,7 @@ import { BadRequest } from "./_errors/bad-request";
 export async function updatePassword(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().patch("/users/:id", {
     schema: {
+      summary: 'update the password of user',
       params: z.object({
         id: z.string().uuid()
       }),

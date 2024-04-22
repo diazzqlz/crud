@@ -8,6 +8,7 @@ import { BadRequest } from "./_errors/bad-request";
 export async function createUser(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post("/register", {
     schema: {
+      summary: 'create an user',
       body: z.object({
         name: z.string(),
         email: z.string().email(),

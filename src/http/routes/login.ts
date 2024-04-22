@@ -17,6 +17,7 @@ interface LoginRequestBody {
 export async function login(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post('/login', {
     schema: {
+      summary: 'log an user',
       body: z.object({
         email: z.string().email(),
         password: z.string()

@@ -10,6 +10,7 @@ import { NotFound } from "./_errors/not-found";
 export async function deleteUser(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().delete("/users/:id", {
     schema: {
+      summary: "delete an user",
       params: z.object({
         id: z.string().uuid()
       }),

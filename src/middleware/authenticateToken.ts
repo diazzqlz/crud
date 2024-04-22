@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
+import { Unauthorized } from "../http/routes/_errors/unauthorized";
 
 export async function authenticateToken(app: FastifyInstance,) {
   app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
@@ -8,23 +9,20 @@ export async function authenticateToken(app: FastifyInstance,) {
     const token = authHeader && authHeader.split(' ')[1]
 
     if(!token) {
-      reply.status(401).send({ message: 'authentication token not provided.'})
-      return reply
+      throw new Unauthorized('authentication token not provided.')
     }
 
     try {
       const jwtSecret = process.env.JWT_SECRET
 
       if (!jwtSecret) {
-        console.error('jwt key not defined');
-        throw new Error('jwt key not defined')
+        throw new Unauthorized('jwt key not defined')
       }
 
       jwt.verify(token, jwtSecret);
 
     } catch(err) {
-      reply.status(403).send({ message: "invalid token"});
-      return reply
+      throw new Unauthorized("invalid token")
     }
   });
 }
